@@ -5,7 +5,7 @@ VisualStudioVersion = 17.5.33424.131
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SaveScummerLib", "SaveScummerLib\SaveScummerLib.csproj", "{54666D42-5C23-4478-B413-BCBAD32B155C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SaveScummer", "SaveScummer\SaveScummer.csproj", "{AFBDC300-94D8-463D-99BA-80ED8CDE5275}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnrailedSaveScummer", "SaveScummer\UnrailedSaveScummer.csproj", "{AFBDC300-94D8-463D-99BA-80ED8CDE5275}"
 	ProjectSection(ProjectDependencies) = postProject
 		{54666D42-5C23-4478-B413-BCBAD32B155C} = {54666D42-5C23-4478-B413-BCBAD32B155C}
 	EndProjectSection

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -7,9 +7,7 @@
     <Nullable>enable</Nullable>
 	<PublishSingleFile>true</PublishSingleFile>
 	<SelfContained>false</SelfContained>
-	<!-- Framework-dependent -->
 	<RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
-	<!-- Target runtime -->
   </PropertyGroup>
 
   <ItemGroup>
