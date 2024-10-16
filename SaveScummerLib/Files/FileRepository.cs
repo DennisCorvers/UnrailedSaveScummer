@@ -1,39 +1,52 @@
 ﻿using SaveScummerLib.Config;
 using SaveScummerLib.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SaveScummerLib.Files
 {
-    internal class FileRepository : IFileRepository
+    public class FileRepository : IFileRepository
     {
         private readonly IConfiguration m_config;
         private readonly ILogger m_logger;
 
         private readonly string m_backupPath;
+        private readonly string m_savePath;
+
+        private readonly IDictionary<string, string> m_trackedFiles;
 
         public FileRepository(IConfiguration config, ILogger logger)
         {
             m_config = config;
             m_logger = logger;
-            m_backupPath = Path.Combine(config.SaveFolderLocation, "ScumBackup");
+            m_savePath = config.SaveFolderLocation;
+            m_backupPath = Path.Combine(m_savePath, "ScumBackup");
+            m_trackedFiles = new Dictionary<string, string>();
         }
 
         public void BackupFile(string filePath)
         {
-            m_logger.Log($"Creating backup for file: {Path.GetFileName(filePath)}");
+            var fileName = Path.GetFileName(filePath);
+            m_logger.Log($"Creating backup for file: {fileName}");
+
             EnsureBackupDir();
-            CopyFile(filePath, m_backupPath);
+
+            var targetPath = CopyFile(filePath, m_backupPath);
+            m_trackedFiles[fileName] = targetPath;
         }
 
         public void RestoreFile(string filePath)
         {
-            m_logger.Log($"Restoring file from backup: {Path.GetFileName(filePath)}");
+            var fileName = Path.GetFileName(filePath);
+            m_logger.Log($"Restoring file from backup: {fileName}");
+
+            // Find file to restore
+            if (!m_trackedFiles.TryGetValue(fileName, out string? backupPath))
+            {
+                m_logger.Log("Unable to find file in backup location.");
+                return;
+            }
+
             EnsureBackupDir();
-            CopyFile(filePath, m_config.SaveFolderLocation);
+            CopyFile(backupPath, m_savePath);
         }
 
         public IEnumerable<string> CreateFileStore()
@@ -48,23 +61,47 @@ namespace SaveScummerLib.Files
 
             EnsureBackupDir();
             var extensionFilter = Utils.StringUtils.NormaliseExtension(m_config.FileExtension);
-            var existingFiles = Directory.EnumerateFiles(m_backupPath, extensionFilter, SearchOption.TopDirectoryOnly);
+            var existingFiles = Directory.EnumerateFiles(m_config.SaveFolderLocation, extensionFilter, SearchOption.TopDirectoryOnly);
 
             foreach (var file in existingFiles)
             {
-                CopyFile(file, m_backupPath);
+                var targetPath = CopyFile(file, m_backupPath);
+                m_trackedFiles.Add(Path.GetFileName(file), targetPath);
             }
 
             m_logger.Log($"Backed up {existingFiles.Count()} files.");
             return existingFiles;
         }
 
-        private static void CopyFile(string filePath, string destinationFolder)
+        public bool VerifyIsNewFile(string filePath)
+        {
+            var fileName = Path.GetFileName(filePath);
+
+            // No backup with the same name found.
+            if (!m_trackedFiles.TryGetValue(fileName, out string? backupPath))
+            {
+                return true;
+            }
+
+            if (!File.Exists(backupPath))
+            {
+                return true;
+            }
+
+            var fileInfoLeft = new FileInfo(filePath);
+            var fileInfoRight = new FileInfo(backupPath);
+
+            return fileInfoLeft.Length != fileInfoRight.Length ||
+                fileInfoLeft.LastWriteTimeUtc != fileInfoRight.LastWriteTimeUtc;
+        }
+
+        private static string CopyFile(string filePath, string destinationFolder)
         {
             var fileName = Path.GetFileName(filePath);
             var destinationFilePath = Path.Combine(destinationFolder, fileName);
 
             File.Copy(filePath, destinationFilePath, true);
+            return destinationFilePath;
         }
 
         private void EnsureBackupDir()

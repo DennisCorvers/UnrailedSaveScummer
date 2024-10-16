@@ -11,7 +11,5 @@ namespace SaveScummerLib.Logging
         void Log(string message);
 
         void Log(string message, Exception? exception);
-
-        void BlankLike();
     }
 }

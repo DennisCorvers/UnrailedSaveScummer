@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace SaveScummerLib.Monitoring
 {
-    public interface IFileMonitor
+    public interface IFileMonitor : IDisposable
     {
-
+        void StartMonitoring();
     }
 }
