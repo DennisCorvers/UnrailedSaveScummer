@@ -4,11 +4,11 @@ namespace SaveScummer
 {
     internal class Logger : ILogger
     {
-        private readonly string m_categoryName;
+        private readonly ConsoleColor m_color;
 
         public Logger()
         {
-            m_categoryName = "Program";
+            m_color = Console.ForegroundColor;
         }
 
         public void Log(string message)
@@ -16,14 +16,32 @@ namespace SaveScummer
 
         public void Log(string message, Exception? exception)
         {
-            var timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.ffff");
-
             if (exception != null)
             {
-                message += $" Exception: {exception.GetType().Name}: {exception.Message}";
+                LogException(message, exception);
+                return;
             }
 
-            Console.WriteLine($"{timestamp} {m_categoryName}: {message}");
+            var type = "INFO";
+            Log(message, type, ConsoleColor.Cyan);
+        }
+
+        public void LogException(string message, Exception exception)
+        {
+            var type = "ERROR";
+            message += $" Exception: {exception.GetType().Name}: {exception.Message}";
+            Log(message, type, ConsoleColor.Red);
+        }
+
+        private void Log(string message, string type, ConsoleColor typeColour)
+        {
+            var timestamp = DateTime.Now.ToString("HH:mm:ss");
+
+            Console.Write(timestamp);
+            Console.ForegroundColor = typeColour;
+            Console.Write($" {type}: ");
+            Console.ForegroundColor = m_color;
+            Console.WriteLine(message);
         }
     }
 }

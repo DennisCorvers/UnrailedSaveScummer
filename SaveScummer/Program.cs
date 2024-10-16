@@ -9,9 +9,27 @@ namespace SaveScummer
     {
         static void Main(string[] args)
         {
+            WriteWelcomeMessage(new[]
+            {
+                "Save files are automatically restored while this application is running.",
+                "Enter 'q' to stop the application."
+            });
+
             var program = new Program();
             program.Run();
             program.Stop();
+        }
+
+        static void WriteWelcomeMessage(IEnumerable<string> text)
+        {
+            var originalColour = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.Green;
+            foreach (var line in text)
+            {
+                Console.WriteLine(line);
+            }
+            Console.WriteLine();
+            Console.ForegroundColor = originalColour;
         }
 
         private readonly ILogger m_logger;
