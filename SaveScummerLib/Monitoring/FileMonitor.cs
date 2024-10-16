@@ -28,6 +28,7 @@ namespace SaveScummerLib.Monitoring
             };
             m_watcher.Deleted += OnFileDeleted;
             m_watcher.Created += OnFileCreated;
+            m_watcher.Changed += OnFileChanged;
         }
 
         ~FileMonitor()
@@ -51,6 +52,12 @@ namespace SaveScummerLib.Monitoring
                 m_logger.Log($"File creation detected: {e.Name}");
                 m_repository.BackupFile(e.FullPath);
             }
+        }
+
+        private void OnFileChanged(object sender, FileSystemEventArgs e)
+        {
+            m_logger.Log($"File change detected: {e.Name}");
+            m_repository.BackupFile(e.FullPath);
         }
 
         public void Dispose()
