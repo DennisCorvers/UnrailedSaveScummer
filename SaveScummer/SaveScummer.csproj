@@ -8,7 +8,7 @@
 	<PublishSingleFile>true</PublishSingleFile>
 	<SelfContained>false</SelfContained>
 	<!-- Framework-dependent -->
-	<RuntimeIdentifier>win-x64</RuntimeIdentifier>
+	<RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
 	<!-- Target runtime -->
   </PropertyGroup>
 
