@@ -10,6 +10,7 @@ namespace SaveScummerLib.Monitoring
         private readonly IConfiguration m_configuration;
         private readonly IFileEventProcessor m_eventProcessor;
         private readonly ILogger m_logger;
+        private readonly ISet<string> m_excludedFiles;
 
         public FileMonitor(IConfiguration config, IFileEventProcessor fileEventProcessor, ILogger logger)
         {
@@ -22,15 +23,8 @@ namespace SaveScummerLib.Monitoring
                 throw new InvalidOperationException("Provided save folder location does not exist.");
             }
 
-            var extension = Utils.StringUtils.NormaliseExtension(config.FileExtension);
-            m_watcher = new FileSystemWatcher(config.SaveFolderLocation, extension)
-            {
-                NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite,
-                IncludeSubdirectories = false,
-            };
-            m_watcher.Deleted += OnWatcherEvent;
-            m_watcher.Created += OnWatcherEvent;
-            m_watcher.Changed += OnWatcherEvent;
+            m_watcher = InitWatcher(config);
+            m_excludedFiles = InitFileFilter(config);
         }
 
         ~FileMonitor()
@@ -38,9 +32,38 @@ namespace SaveScummerLib.Monitoring
             Dispose();
         }
 
+        private ISet<string> InitFileFilter(IConfiguration configuration)
+        {
+            var ignoredFiles = configuration.IgnoredFiles
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            m_logger.Log($"The following files have been excluded: {string.Join(", ", ignoredFiles)}");
+            return ignoredFiles;
+        }
+
+        private FileSystemWatcher InitWatcher(IConfiguration configuration)
+        {
+            var extension = Utils.StringUtils.NormaliseExtension(configuration.FileExtension);
+            var targetFolder = configuration.SaveFolderLocation;
+
+            var watcher = new FileSystemWatcher(targetFolder, extension)
+            {
+                NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite,
+                IncludeSubdirectories = false,
+            };
+            watcher.Deleted += OnWatcherEvent;
+            watcher.Created += OnWatcherEvent;
+            watcher.Changed += OnWatcherEvent;
+
+            return watcher;
+        }
+
         private void OnWatcherEvent(object sender, FileSystemEventArgs e)
         {
-            m_eventProcessor.ProcessEvent(e);
+            if (!m_excludedFiles.Contains(e.Name!))
+            {
+                m_eventProcessor.ProcessEvent(e);
+            }
         }
 
         public void Dispose()

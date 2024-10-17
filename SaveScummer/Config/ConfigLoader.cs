@@ -19,6 +19,8 @@ namespace UnrailedSaveScummer.Config
             public string SaveFolderLocation => "D:\\Documents\\temp";
 
             public string FileExtension => "*.txt";
+
+            public IReadOnlyCollection<string> IgnoredFiles => new[] { "filter.txt" };
         }
     }
 }

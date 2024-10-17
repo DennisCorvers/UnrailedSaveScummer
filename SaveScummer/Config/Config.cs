@@ -18,6 +18,9 @@ namespace UnrailedSaveScummer.Config
         public string FileExtension
             => m_fileExtension;
 
+        public IReadOnlyCollection<string> IgnoredFiles
+            => new[] { "progress.sav" };
+
         public Config()
         {
 
