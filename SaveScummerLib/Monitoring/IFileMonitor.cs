@@ -9,5 +9,6 @@ namespace SaveScummerLib.Monitoring
     public interface IFileMonitor : IDisposable
     {
         void StartMonitoring();
+        void StopMonitoring();
     }
 }

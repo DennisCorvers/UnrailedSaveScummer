@@ -73,6 +73,9 @@ namespace SaveScummerLib.Files
             return existingFiles;
         }
 
+        public DateTime GetLastWriteTimeUTC(string filePath)
+            => File.GetLastWriteTimeUtc(filePath);
+
         private static string CopyFile(string filePath, string destinationFolder)
         {
             var fileName = Path.GetFileName(filePath);

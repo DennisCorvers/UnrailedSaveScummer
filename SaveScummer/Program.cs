@@ -37,13 +37,15 @@ namespace UnrailedSaveScummer
         private readonly IFileRepository m_fileRepository;
         private readonly IFileMonitor m_fileMonitor;
         private readonly IConfiguration m_config;
+        private readonly IFileEventProcessor m_eventProcessor;
 
         public Program()
         {
             m_logger = new Logger();
             m_config = ConfigLoader.LoadConfig();
             m_fileRepository = new FileRepository(m_config, m_logger);
-            m_fileMonitor = new FileMonitor(m_config, m_logger, m_fileRepository);
+            m_eventProcessor = new FileEventProcessor(m_logger, m_fileRepository);
+            m_fileMonitor = new FileMonitor(m_config, m_eventProcessor, m_logger);
         }
 
         public void Run()
@@ -61,6 +63,7 @@ namespace UnrailedSaveScummer
             }
             finally
             {
+                m_fileMonitor.StopMonitoring();
                 m_fileMonitor.Dispose();
             }
         }

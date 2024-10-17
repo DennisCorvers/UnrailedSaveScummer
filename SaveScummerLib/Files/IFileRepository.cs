@@ -7,5 +7,7 @@
         void RestoreFile(string fileName);
 
         IEnumerable<string> CreateFileStore();
+
+        DateTime GetLastWriteTimeUTC(string filePath);
     }
 }
