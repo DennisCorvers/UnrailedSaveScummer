@@ -1,6 +1,6 @@
 ﻿using SaveScummerLib.Logging;
 
-namespace SaveScummer
+namespace UnrailedSaveScummer
 {
     internal class Logger : ILogger
     {

@@ -1,4 +1,6 @@
-﻿namespace SaveScummerLib.Config
+﻿using SaveScummerLib.Config;
+
+namespace UnrailedSaveScummer.Config
 {
     internal class Config : IConfiguration
     {

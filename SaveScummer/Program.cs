@@ -2,8 +2,9 @@
 using SaveScummerLib.Files;
 using SaveScummerLib.Logging;
 using SaveScummerLib.Monitoring;
+using UnrailedSaveScummer.Config;
 
-namespace SaveScummer
+namespace UnrailedSaveScummer
 {
     internal class Program
     {
@@ -40,7 +41,7 @@ namespace SaveScummer
         public Program()
         {
             m_logger = new Logger();
-            m_config = ConfigLoader.LoadConfiguration();
+            m_config = ConfigLoader.LoadConfig();
             m_fileRepository = new FileRepository(m_config, m_logger);
             m_fileMonitor = new FileMonitor(m_config, m_logger, m_fileRepository);
         }
