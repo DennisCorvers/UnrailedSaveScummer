@@ -23,7 +23,7 @@ namespace SaveScummerLib.Monitoring
             var extension = Utils.StringUtils.NormaliseExtension(config.FileExtension);
             m_watcher = new FileSystemWatcher(config.SaveFolderLocation, extension)
             {
-                NotifyFilter = NotifyFilters.FileName,
+                NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite,
                 IncludeSubdirectories = false,
             };
             m_watcher.Deleted += OnFileDeleted;
@@ -56,8 +56,11 @@ namespace SaveScummerLib.Monitoring
 
         private void OnFileChanged(object sender, FileSystemEventArgs e)
         {
-            m_logger.Log($"File change detected: {e.Name}");
-            m_repository.BackupFile(e.FullPath);
+            if (m_repository.VerifyIsNewFile(e.FullPath))
+            {
+                m_logger.Log($"File creation detected: {e.Name}");
+                m_repository.BackupFile(e.FullPath);
+            }
         }
 
         public void Dispose()
