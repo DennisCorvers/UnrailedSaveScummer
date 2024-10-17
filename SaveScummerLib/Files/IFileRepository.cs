@@ -7,7 +7,5 @@
         void RestoreFile(string fileName);
 
         IEnumerable<string> CreateFileStore();
-
-        bool VerifyIsNewFile(string filePath);
     }
 }

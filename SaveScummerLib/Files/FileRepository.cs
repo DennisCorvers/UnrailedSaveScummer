@@ -73,28 +73,6 @@ namespace SaveScummerLib.Files
             return existingFiles;
         }
 
-        public bool VerifyIsNewFile(string filePath)
-        {
-            var fileName = Path.GetFileName(filePath);
-
-            // No backup with the same name found.
-            if (!m_trackedFiles.TryGetValue(fileName, out string? backupPath))
-            {
-                return true;
-            }
-
-            if (!File.Exists(backupPath))
-            {
-                return true;
-            }
-
-            var fileInfoLeft = new FileInfo(filePath);
-            var fileInfoRight = new FileInfo(backupPath);
-
-            return fileInfoLeft.Length != fileInfoRight.Length ||
-                fileInfoLeft.LastWriteTimeUtc != fileInfoRight.LastWriteTimeUtc;
-        }
-
         private static string CopyFile(string filePath, string destinationFolder)
         {
             var fileName = Path.GetFileName(filePath);

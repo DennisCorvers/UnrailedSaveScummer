@@ -6,9 +6,12 @@ namespace SaveScummerLib.Monitoring
 {
     public class FileMonitor : IFileMonitor
     {
+        private static readonly DateTime DefaultFileAccessTime = new(1601, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
         private readonly ILogger m_logger;
         private readonly FileSystemWatcher m_watcher;
         private readonly IFileRepository m_repository;
+        private readonly IDictionary<string, DateTime> m_fileLastChangeTime;
 
         public FileMonitor(IConfiguration config, ILogger logger, IFileRepository fileRepository)
         {
@@ -19,6 +22,8 @@ namespace SaveScummerLib.Monitoring
             {
                 throw new InvalidOperationException("Provided save folder location does not exist.");
             }
+
+            m_fileLastChangeTime = new Dictionary<string, DateTime>();
 
             var extension = Utils.StringUtils.NormaliseExtension(config.FileExtension);
             m_watcher = new FileSystemWatcher(config.SaveFolderLocation, extension)
@@ -38,16 +43,14 @@ namespace SaveScummerLib.Monitoring
 
         private void OnFileDeleted(object sender, FileSystemEventArgs e)
         {
+            CanHandleFile(e);
             m_logger.Log($"File deletion detected: {e.Name}");
             m_repository.RestoreFile(e.FullPath);
         }
 
         private void OnFileCreated(object sender, FileSystemEventArgs e)
         {
-            // When a backup is restored, this event is triggered.
-            // This event also gets triggered when a new file is created.
-            // We want to make sure the created file is a new file, and not a restored backup.
-            if (m_repository.VerifyIsNewFile(e.FullPath))
+            if (CanHandleFile(e))
             {
                 m_logger.Log($"File creation detected: {e.Name}");
                 m_repository.BackupFile(e.FullPath);
@@ -56,9 +59,9 @@ namespace SaveScummerLib.Monitoring
 
         private void OnFileChanged(object sender, FileSystemEventArgs e)
         {
-            if (m_repository.VerifyIsNewFile(e.FullPath))
+            if (CanHandleFile(e))
             {
-                m_logger.Log($"File creation detected: {e.Name}");
+                m_logger.Log($"File change detected: {e.Name}");
                 m_repository.BackupFile(e.FullPath);
             }
         }
@@ -76,6 +79,38 @@ namespace SaveScummerLib.Monitoring
         public void StartMonitoring()
         {
             m_watcher.EnableRaisingEvents = true;
+        }
+
+        private bool CanHandleFile(FileSystemEventArgs e)
+        {
+            var fileName = e.Name!;
+
+            lock (m_fileLastChangeTime)
+            {
+                var fileAccessTime = File.GetLastWriteTimeUtc(e.FullPath);
+
+                // Target file does not exist (deleted file)
+                if (fileAccessTime == DefaultFileAccessTime)
+                {
+                    m_fileLastChangeTime[fileName] = DateTime.UtcNow;
+                    return true;
+                }
+
+                // File has not yet been handled.
+                if (!m_fileLastChangeTime.TryGetValue(fileName, out var cachedAccessTime))
+                {
+                    m_fileLastChangeTime[fileName] = DateTime.UtcNow;
+                    return true;
+                }
+
+                if (fileAccessTime > cachedAccessTime)
+                {
+                    m_fileLastChangeTime[fileName] = fileAccessTime;
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }
