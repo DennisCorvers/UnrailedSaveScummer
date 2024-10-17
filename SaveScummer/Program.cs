@@ -1,4 +1,5 @@
-﻿using SaveScummerLib.Config;
+﻿using Microsoft.Extensions.DependencyInjection;
+using SaveScummerLib.Config;
 using SaveScummerLib.Files;
 using SaveScummerLib.Logging;
 using SaveScummerLib.Monitoring;
@@ -16,9 +17,19 @@ namespace UnrailedSaveScummer
                 "Enter 'q' to stop the application."
             });
 
-            var program = new Program();
+            var serviceCollection = new ServiceCollection();
+            var serviceProvider = serviceCollection
+                .AddSingleton<ILogger, Logger>()
+                .AddSingleton<IConfiguration>(x => ConfigLoader.LoadConfig())
+                .AddSingleton<IFileRepository, FileRepository>()
+                .AddSingleton<IFileEventProcessor, FileEventProcessor>()
+                .AddSingleton<IFileMonitor, FileMonitor>()
+                .AddSingleton<Program>()
+                .BuildServiceProvider();
+
+            // Resolve the Program class and run it
+            var program = serviceProvider.GetRequiredService<Program>();
             program.Run();
-            program.Stop();
         }
 
         static void WriteWelcomeMessage(IEnumerable<string> text)
@@ -36,16 +47,12 @@ namespace UnrailedSaveScummer
         private readonly ILogger m_logger;
         private readonly IFileRepository m_fileRepository;
         private readonly IFileMonitor m_fileMonitor;
-        private readonly IConfiguration m_config;
-        private readonly IFileEventProcessor m_eventProcessor;
 
-        public Program()
+        public Program(ILogger logger, IFileRepository fileRepository, IFileMonitor fileMonitor)
         {
-            m_logger = new Logger();
-            m_config = ConfigLoader.LoadConfig();
-            m_fileRepository = new FileRepository(m_config, m_logger);
-            m_eventProcessor = new FileEventProcessor(m_logger, m_fileRepository);
-            m_fileMonitor = new FileMonitor(m_config, m_eventProcessor, m_logger);
+            m_logger = logger;
+            m_fileRepository = fileRepository;
+            m_fileMonitor = fileMonitor;
         }
 
         public void Run()
